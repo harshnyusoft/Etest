@@ -39,7 +39,8 @@ const cartSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true,
-    unique: true
+    unique: true,
+    index: true
   },
   items: [cartItemSchema],
   totalItems: {
@@ -93,5 +94,10 @@ cartSchema.virtual('finalTotal').get(function() {
 
 cartSchema.set('toJSON', { virtuals: true });
 cartSchema.set('toObject', { virtuals: true });
+
+// Indexes for better performance
+cartSchema.index({ 'items.product': 1 });
+cartSchema.index({ createdAt: -1 });
+cartSchema.index({ updatedAt: -1 });
 
 module.exports = mongoose.model('Cart', cartSchema);

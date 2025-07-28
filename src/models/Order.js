@@ -71,7 +71,8 @@ const orderSchema = new mongoose.Schema({
   orderNumber: {
     type: String,
     unique: true,
-    required: true
+    required: true,
+    index: true
   },
   user: {
     type: mongoose.Schema.Types.ObjectId,
@@ -181,7 +182,6 @@ orderSchema.pre('save', function(next) {
 
 // Indexes
 orderSchema.index({ user: 1, createdAt: -1 });
-orderSchema.index({ orderNumber: 1 });
 orderSchema.index({ status: 1 });
 
 module.exports = mongoose.model('Order', orderSchema);

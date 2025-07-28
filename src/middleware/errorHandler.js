@@ -7,7 +7,11 @@ const handleCastErrorDB = (err) => {
 };
 
 const handleDuplicateFieldsDB = (err) => {
-  const value = err.errmsg.match(/(["'])(\\?.)*?\1/)[0];
+  let value = 'unknown field';
+  if (err.keyValue) {
+    const field = Object.keys(err.keyValue)[0];
+    value = err.keyValue[field];
+  }
   const message = `Duplicate field value: ${value}. Please use another value!`;
   return new AppError(message, 400);
 };
@@ -23,6 +27,26 @@ const handleJWTError = () =>
 
 const handleJWTExpiredError = () =>
   new AppError('Your token has expired! Please log in again.', 401);
+
+const handleMongoError = (err) => {
+  if (err.code === 11000) {
+    return handleDuplicateFieldsDB(err);
+  }
+  return new AppError('Database operation failed', 500);
+};
+
+const handleMulterError = (err) => {
+  if (err.code === 'LIMIT_FILE_SIZE') {
+    return new AppError('File too large. Maximum size is 5MB', 400);
+  }
+  if (err.code === 'LIMIT_FILE_COUNT') {
+    return new AppError('Too many files. Maximum is 5 files', 400);
+  }
+  if (err.code === 'LIMIT_UNEXPECTED_FILE') {
+    return new AppError('Unexpected file field', 400);
+  }
+  return new AppError('File upload error', 400);
+};
 
 const sendErrorDev = (err, res) => {
   res.status(err.statusCode).json({
@@ -61,11 +85,13 @@ module.exports = (err, req, res, next) => {
     let error = { ...err };
     error.message = err.message;
     
+    // Handle different error types
     if (error.name === 'CastError') error = handleCastErrorDB(error);
-    if (error.code === 11000) error = handleDuplicateFieldsDB(error);
     if (error.name === 'ValidationError') error = handleValidationErrorDB(error);
     if (error.name === 'JsonWebTokenError') error = handleJWTError();
     if (error.name === 'TokenExpiredError') error = handleJWTExpiredError();
+    if (error.name === 'MongoError' || error.name === 'MongoServerError') error = handleMongoError(error);
+    if (error.name === 'MulterError') error = handleMulterError(error);
     
     sendErrorProd(error, res);
   }

@@ -42,7 +42,8 @@ const variantSchema = new mongoose.Schema({
     type: String,
     unique: true,
     required: true,
-    trim: true
+    trim: true,
+    index: true
   }
 });
 
@@ -56,7 +57,8 @@ const productSchema = new mongoose.Schema({
   slug: {
     type: String,
     unique: true,
-    lowercase: true
+    lowercase: true,
+    index: true
   },
   description: {
     type: String,
@@ -201,13 +203,11 @@ productSchema.pre('save', function(next) {
 });
 
 // Indexes for better performance
-productSchema.index({ slug: 1 });
 productSchema.index({ category: 1, status: 1 });
 productSchema.index({ brand: 1, status: 1 });
 productSchema.index({ featured: 1, status: 1 });
 productSchema.index({ averageRating: -1 });
 productSchema.index({ createdAt: -1 });
-productSchema.index({ 'variants.sku': 1 });
 productSchema.index({ name: 'text', description: 'text', brand: 'text' });
 
 module.exports = mongoose.model('Product', productSchema);

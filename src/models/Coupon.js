@@ -8,6 +8,7 @@ const couponSchema = new mongoose.Schema({
     unique: true,
     uppercase: true,
     trim: true,
+    index: true,
     minlength: [3, 'Coupon code must be at least 3 characters'],
     maxlength: [20, 'Coupon code cannot exceed 20 characters']
   },
@@ -135,7 +136,6 @@ couponSchema.pre('save', function(next) {
 });
 
 // Indexes
-couponSchema.index({ code: 1 });
 couponSchema.index({ isActive: 1, validFrom: 1, validUntil: 1 });
 
 couponSchema.set('toJSON', { virtuals: true });

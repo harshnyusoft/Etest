@@ -9,12 +9,44 @@ class APIFeatures {
     const excludedFields = ['page', 'sort', 'limit', 'fields', 'search'];
     excludedFields.forEach(el => delete queryObj[el]);
 
-    // Advanced filtering
-    let queryStr = JSON.stringify(queryObj);
+    // Sanitize and validate query parameters
+    const sanitizedQuery = this.sanitizeQuery(queryObj);
+    
+    // Advanced filtering with proper escaping
+    let queryStr = JSON.stringify(sanitizedQuery);
     queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, match => `$${match}`);
 
-    this.query = this.query.find(JSON.parse(queryStr));
+    try {
+      const parsedQuery = JSON.parse(queryStr);
+      this.query = this.query.find(parsedQuery);
+    } catch (error) {
+      // If parsing fails, return empty result
+      this.query = this.query.find({ _id: null });
+    }
+    
     return this;
+  }
+
+  sanitizeQuery(queryObj) {
+    const sanitized = {};
+    const allowedFields = [
+      'name', 'brand', 'category', 'status', 'featured', 
+      'price', 'averageRating', 'createdAt', 'updatedAt'
+    ];
+    
+    for (const [key, value] of Object.entries(queryObj)) {
+      // Only allow specific fields to prevent injection
+      if (allowedFields.includes(key)) {
+        // Sanitize string values
+        if (typeof value === 'string') {
+          sanitized[key] = value.replace(/[<>]/g, '');
+        } else {
+          sanitized[key] = value;
+        }
+      }
+    }
+    
+    return sanitized;
   }
 
   search() {

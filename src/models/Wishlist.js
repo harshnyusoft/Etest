@@ -5,7 +5,8 @@ const wishlistSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true,
-    unique: true
+    unique: true,
+    index: true
   },
   items: [{
     product: {
@@ -32,7 +33,6 @@ wishlistSchema.pre('save', function(next) {
   next();
 });
 
-wishlistSchema.index({ user: 1 });
 wishlistSchema.index({ 'items.product': 1 });
 
 module.exports = mongoose.model('Wishlist', wishlistSchema);

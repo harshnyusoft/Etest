@@ -5,17 +5,33 @@ const connectDB = async () => {
   try {
     // Set mongoose options for better connection handling
     const options = {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      serverSelectionTimeoutMS: 5000, // Keep trying to send operations for 5 seconds
-      socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
-      bufferMaxEntries: 0, // Disable mongoose buffering
-      bufferCommands: false, // Disable mongoose buffering
+      serverSelectionTimeoutMS: 10000, // Increased to 10 seconds
+      socketTimeoutMS: 60000, // Increased to 60 seconds
+      maxPoolSize: 10, // Connection pool size
+      minPoolSize: 2, // Minimum connections in pool
+      maxIdleTimeMS: 30000, // Close connections after 30 seconds of inactivity
+      retryWrites: true,
+      w: 'majority', // Write concern
+      readPreference: 'primary'
     };
     
     const conn = await mongoose.connect(process.env.MONGODB_URI, options);
 
     logger.info(`MongoDB Connected: ${conn.connection.host}`);
+    
+    // Handle connection events
+    mongoose.connection.on('error', (err) => {
+      logger.error('MongoDB connection error:', err);
+    });
+    
+    mongoose.connection.on('disconnected', () => {
+      logger.warn('MongoDB disconnected');
+    });
+    
+    mongoose.connection.on('reconnected', () => {
+      logger.info('MongoDB reconnected');
+    });
+    
   } catch (error) {
     logger.error('Database connection error:', error);
     // In development, don't exit the process immediately

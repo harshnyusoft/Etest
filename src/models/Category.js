@@ -11,7 +11,8 @@ const categorySchema = new mongoose.Schema({
   slug: {
     type: String,
     unique: true,
-    lowercase: true
+    lowercase: true,
+    index: true
   },
   description: {
     type: String,
@@ -87,7 +88,6 @@ categorySchema.pre('save', async function(next) {
 });
 
 // Index for better performance
-categorySchema.index({ slug: 1 });
 categorySchema.index({ parent: 1, isActive: 1 });
 categorySchema.index({ level: 1, sortOrder: 1 });
 
